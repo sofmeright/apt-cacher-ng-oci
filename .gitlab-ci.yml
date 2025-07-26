@@ -150,9 +150,7 @@ update-release-badge:
 
     echo "🔍 Checking current pipeline job statuses..."
     JOB_STATUSES=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/jobs" | \
-      jq -r '.[] | select(.name != "update-release-badge") | \
-      .status')
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/jobs" | jq -r '.[] | select(.name != "update-release-badge") | .status')
 
     ALL_SUCCESS=true
     ANY_FAILED=false
@@ -204,7 +202,7 @@ update-release-badge:
 
     FILE_PATH="assets/badge-release-status.svg"
     ENCODED_FILE_PATH=$(echo "$FILE_PATH" | sed 's/\//%2F/g')
-    
+
     API_RESPONSE=$(curl --silent --write-out "\n%{http_code}" --request PUT --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
       --header "Content-Type: application/json" \
       --data "{
