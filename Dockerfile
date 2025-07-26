@@ -10,7 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # Install tini and apt-cacher-ng and gosu
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      apt-cacher-ng tini gosu ca-certificates \
+      apt-cacher-ng ca-certificates gosu tini wget \
  && rm -rf /var/lib/apt/lists/*
 
 # Patch config: set ForeGround mode and passthrough pattern
