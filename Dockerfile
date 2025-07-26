@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Patch config: set ForeGround mode and passthrough pattern
 RUN sed -i 's|# ForeGround: .*|ForeGround: 1|' /etc/apt-cacher-ng/acng.conf && \
+    sed -i 's|# LogDir: .*|LogDir: /var/log/apt-cacher-ng|' /etc/apt-cacher-ng/acng.conf && \
     grep -q '^PassThroughPattern:' /etc/apt-cacher-ng/acng.conf && \
       sed -i "s|^PassThroughPattern:.*|PassThroughPattern: ${PASS_THROUGH_PATTERN}|" /etc/apt-cacher-ng/acng.conf || \
       echo "PassThroughPattern: ${PASS_THROUGH_PATTERN}" >> /etc/apt-cacher-ng/acng.conf
