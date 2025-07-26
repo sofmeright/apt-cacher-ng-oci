@@ -42,6 +42,8 @@ create-release:
   needs:
     - job: generate_release_notes
       artifacts: true
+  only:
+    - tags
   script:  |
     echo "Reading changelog..."
     RELEASE_NOTES=$(cat release.md)
