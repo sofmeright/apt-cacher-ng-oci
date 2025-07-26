@@ -9,10 +9,14 @@ ENV APT_CACHER_NG_VERSION=3.7.4 \
 
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-      apt-cacher-ng=${APT_CACHER_NG_VERSION}* ca-certificates gosu wget \
- && sed 's/# ForeGround: 0/ForeGround: 1/' -i /etc/apt-cacher-ng/acng.conf \
- && sed 's/# PassThroughPattern:.*this would allow.*/PassThroughPattern: .* #/' -i /etc/apt-cacher-ng/acng.conf \
- && rm -rf /var/lib/apt/lists/*
+      apt-cacher-ng=${APT_CACHER_NG_VERSION}* ca-certificates gosu wget
+
+# Enable foreground mode and redirect logs to stdout
+RUN sed -i 's|# ForeGround: .*|ForeGround: 1|' /etc/apt-cacher-ng/acng.conf \
+ && sed -i 's|# Logfile: .*|Logfile: /dev/stdout|' /etc/apt-cacher-ng/acng.conf \
+ && sed -i 's|# PassThroughPattern:.*|PassThroughPattern: .* #|' /etc/apt-cacher-ng/acng.conf
+
+RUN rm -rf /var/lib/apt/lists/*
 
 COPY entrypoint.sh /sbin/entrypoint.sh
 
