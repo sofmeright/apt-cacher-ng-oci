@@ -64,17 +64,6 @@ create-release:
       --form "tag_name=$CI_COMMIT_TAG" \
       --form "description=$RELEASE_NOTES" \
       "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases" || echo "Release might already exist"                                                               >/dev/null
-
-    DOCKER_IMAGE_LINK="https://hub.docker.com/r/$DOCKER_HUB_USERNAME/$CI_PROJECT_NAME/tags?page=1&name=$CI_COMMIT_TAG"
-
-    echo "✅ Docker image assumed pushed: $DOCKER_IMAGE_LINK"
-
-    echo "Adding a link to $DOCKER_HUB_USERNAME/$CI_PROJECT_NAME:$CI_COMMIT_TAG via the Docker Hub on the generated Gitlab release page..."
-    curl --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-      --request POST \
-      --header "Content-Type: application/json" \
-      --data "{\"name\":\"Docker Image $CI_COMMIT_TAG\",\"url\":\"$DOCKER_IMAGE_LINK\",\"link_type\":\"other\"}" \
-      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links"                                                                         >/dev/null
     echo "🧪 Validating GitLab release creation..."
 
     RELEASE_RESPONSE=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
@@ -95,22 +84,16 @@ create-release:
         echo "$RELEASE_RESPONSE"
         exit 1
       fi
-  stage: release
 
-generate_release_notes:
-  artifacts:
-    paths:
-      - release.md
-    expire_in: 1 hour
-  before_script: |
-    chmod +x ./scripts/release-notes.sh
-  image: alpine:3.22.1
-  only:
-    - tags
-  script: |
-    echo "Generating release notes for $DOCKER_HUB_USERNAME/$CI_PROJECT_NAME:$CI_COMMIT_TAG..."
-    apk add --no-cache bash curl git                                                                                                                        >/dev/null
-    ./scripts/release-notes.sh > release.md
+    DOCKER_IMAGE_LINK="https://hub.docker.com/r/$DOCKER_HUB_USERNAME/$CI_PROJECT_NAME/tags?page=1&name=$CI_COMMIT_TAG"
+
+    echo "Adding a link to $DOCKER_HUB_USERNAME/$CI_PROJECT_NAME:$CI_COMMIT_TAG via the Docker Hub on the generated Gitlab release page..."
+    curl --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+      --request POST \
+      --header "Content-Type: application/json" \
+      --data "{\"name\":\"Docker Image $CI_COMMIT_TAG\",\"url\":\"$DOCKER_IMAGE_LINK\",\"link_type\":\"other\"}" \
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links"                                                                         >/dev/null
+      
     echo "🧪 Validating GitLab release asset link..."
 
     ASSET_LINKS=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
@@ -129,5 +112,31 @@ generate_release_notes:
       echo "🔍 Full asset links response:"
       echo "$ASSET_LINKS"
       exit 1
+    fi
+  stage: release
+
+generate_release_notes:
+  artifacts:
+    paths:
+      - release.md
+    expire_in: 1 hour
+  before_script: |
+    chmod +x ./scripts/release-notes.sh
+  image: alpine:3.22.1
+  only:
+    - tags
+  script: |
+    echo "Generating release notes for $DOCKER_HUB_USERNAME/$CI_PROJECT_NAME:$CI_COMMIT_TAG..."
+    apk add --no-cache bash curl git                                                                                                                        >/dev/null
+    ./scripts/release-notes.sh > release.md
+    
+    echo "🧪 Validating release notes file..."
+
+    if [ ! -s release.md ]; then
+      echo "❌ release.md was not created or is empty!"
+      exit 1
+    else
+      echo "✅ release.md created successfully with contents:"
+      head -n 10 release.md  # Show first 10 lines
     fi
   stage: release
