@@ -109,7 +109,7 @@ generate_release_notes:
     - tags
   script: |
     echo "Generating release notes for $DOCKER_HUB_USERNAME/$CI_PROJECT_NAME:$CI_COMMIT_TAG..."
-    apk add --no-cache git bash                                                                                                                             >/dev/null
+    apk add --no-cache bash curl git                                                                                                                        >/dev/null
     ./scripts/release-notes.sh > release.md
     echo "🧪 Validating GitLab release asset link..."
 
