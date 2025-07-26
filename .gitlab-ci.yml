@@ -59,6 +59,8 @@ create-release:
     - if: $CI_COMMIT_TAG
 
 generate_release_notes:
+  before_script:
+    - chmod +x ./scripts/release-notes.sh
   image: alpine:3.22.1
   stage: release
   variables:
