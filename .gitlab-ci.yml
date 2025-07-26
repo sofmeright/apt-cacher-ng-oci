@@ -146,58 +146,52 @@ update-release-badge:
   image: alpine:3.22.1
   script: |
     set -e
+    apk add --no-cache curl jq bash coreutils
 
-    echo "🔧 Installing dependencies..."
-    apk add --no-cache curl jq git bash sed
+    echo "🔍 Fetching latest release tag..."
+    LATEST_TAG=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/tags" | jq -r '.[0].name')
 
-    echo "📥 Fetching latest tag..."
-    LATEST_TAG=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/tags" | jq -r '.[0].name')
+    echo "🔍 Fetching pipeline status for $LATEST_TAG..."
+    PIPELINE_STATUS=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines?ref=$LATEST_TAG" | jq -r '.[0].status')
 
-    echo "📊 Getting pipeline status for $LATEST_TAG..."
-    PIPELINE_STATUS=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines?ref=$LATEST_TAG" | jq -r '.[0].status')
+    echo "Latest tag: $LATEST_TAG"
+    echo "Pipeline status: $PIPELINE_STATUS"
 
-    echo "🖼️ Pipeline status: $PIPELINE_STATUS"
-
-    echo "🌀 Cloning the repo..."
-    git clone https://$CI_PUSH_USER:$GITLAB_TOKEN@gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci.git repo
-    cd repo
-    git checkout main
-
-    mkdir -p assets
-
-    # Generate badge
     case "$PIPELINE_STATUS" in
       success)
         COLOR="#4c1"
         STATUS="passed"
-        cp ../assets/badge-release-pass.svg assets/badge-release-status.svg
         ;;
       failed)
         COLOR="#e05d44"
         STATUS="failed"
-        cp ../assets/badge-release-fail.svg assets/badge-release-status.svg
         ;;
       *)
         COLOR="#dfb317"
         STATUS="$PIPELINE_STATUS"
-        sed -e "s|{{COLOR}}|$COLOR|g" -e "s|{{STATUS}}|$STATUS|g" ../assets/badge-release-generic.svg > assets/badge-release-status.svg
         ;;
     esac
 
-    echo "✅ Badge prepared: $STATUS"
+    echo "🎨 Generating badge SVG..."
+    mkdir -p assets
+    sed -e "s|{{COLOR}}|$COLOR|g" -e "s|{{STATUS}}|$STATUS|g" assets/badge-release-generic.svg > assets/badge-release-status.svg
 
-    # Git config
-    git config --global user.email "sofmeright@gmail.com"
-    git config --global user.name "SoFMeRight"
+    # Encode file as base64
+    CONTENT_BASE64=$(base64 -w 0 assets/badge-release-status.svg)
 
-    if git diff --quiet && git diff --cached --quiet; then
-      echo "✅ No changes to commit — badge is up to date."
-    else
-      echo "📦 Committing updated badge..."
-      git add assets/badge-release-status.svg
-      git commit -m "Update release status badge for $LATEST_TAG"
-      git push origin main
-    fi
+    echo "🚀 Uploading badge to repository via GitLab API..."
+
+    curl --request PUT --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+      --header "Content-Type: application/json" \
+      --data "{
+        \"branch\": \"main\",
+        \"content\": \"$CONTENT_BASE64\",
+        \"commit_message\": \"Update release badge for $LATEST_TAG\",
+        \"encoding\": \"base64\"
+      }" \
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/files/$(curl -Gso /dev/null -w %{url_effective} --data-urlencode "file_path=assets/badge-release-status.svg" "" | sed 's/.*=//')"
   artifacts:
     paths:
       - assets/badge-release-status.svg
