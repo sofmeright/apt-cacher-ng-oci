@@ -147,57 +147,56 @@ update-release-badge:
   script: |
     set -e
 
-    echo "Installing dependencies..."
-    apk add --no-cache curl jq git bash
+    echo "🔧 Installing dependencies..."
+    apk add --no-cache curl jq git bash sed
 
-    echo "Fetching latest tag..."
+    echo "📥 Fetching latest tag..."
     LATEST_TAG=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/tags" | jq -r '.[0].name')
 
-    echo "Fetching pipeline status for $LATEST_TAG..."
+    echo "📊 Getting pipeline status for $LATEST_TAG..."
     PIPELINE_STATUS=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines?ref=$LATEST_TAG" | jq -r '.[0].status')
 
-    echo "Latest tag: $LATEST_TAG"
-    echo "Pipeline status: $PIPELINE_STATUS"
+    echo "🖼️ Pipeline status: $PIPELINE_STATUS"
 
+    echo "🌀 Cloning the repo..."
+    git clone https://$CI_PUSH_USER:$GITLAB_TOKEN@gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci.git repo
+    cd repo
+    git checkout main
+
+    mkdir -p assets
+
+    # Generate badge
     case "$PIPELINE_STATUS" in
       success)
         COLOR="#4c1"
         STATUS="passed"
+        cp ../assets/badge-release-pass.svg assets/badge-release-status.svg
         ;;
       failed)
         COLOR="#e05d44"
         STATUS="failed"
+        cp ../assets/badge-release-fail.svg assets/badge-release-status.svg
         ;;
       *)
         COLOR="#dfb317"
         STATUS="$PIPELINE_STATUS"
+        sed -e "s|{{COLOR}}|$COLOR|g" -e "s|{{STATUS}}|$STATUS|g" ../assets/badge-release-generic.svg > assets/badge-release-status.svg
         ;;
     esac
 
-    echo "Cloning the repository cleanly..."
-    rm -rf repo
-    git clone https://$CI_PUSH_USER:$GITLAB_TOKEN@gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci.git repo
-    cd repo
+    echo "✅ Badge prepared: $STATUS"
 
-    git config user.name "SoFMeRight"
-    git config user.email "sofmeright@gmail.com"
+    # Git config
+    git config --global user.email "sofmeright@gmail.com"
+    git config --global user.name "SoFMeRight"
 
-    echo "Generating badge..."
-    mkdir -p assets
-    sed -e "s|{{COLOR}}|$COLOR|g" -e "s|{{STATUS}}|$STATUS|g" assets/badge-release-generic.svg > assets/badge-release-status.svg
-
-    if grep -q "{{" assets/badge-release-status.svg; then
-      echo "❌ Badge still contains unreplaced placeholders!"
-      exit 1
-    fi
-
-    if git diff --quiet assets/badge-release-status.svg; then
+    if git diff --quiet && git diff --cached --quiet; then
       echo "✅ No changes to commit — badge is up to date."
     else
+      echo "📦 Committing updated badge..."
       git add assets/badge-release-status.svg
       git commit -m "Update release status badge for $LATEST_TAG"
       git push origin main
-      echo "✅ Badge updated and pushed to main."
     fi
   artifacts:
     paths:
