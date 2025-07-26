@@ -34,8 +34,7 @@ fi
 
 # default behaviour is to launch apt-cacher-ng
 if [[ -z ${1} ]]; then
-  exec start-stop-daemon --start --chuid ${APT_CACHER_NG_USER}:${APT_CACHER_NG_USER} \
-    --exec "$(command -v apt-cacher-ng)" -- -c /etc/apt-cacher-ng ${EXTRA_ARGS}
+  exec gosu ${APT_CACHER_NG_USER} /usr/sbin/apt-cacher-ng -c /etc/apt-cacher-ng ${EXTRA_ARGS}
 else
   exec "$@"
 fi
