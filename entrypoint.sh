@@ -32,4 +32,4 @@ for file in "${LOG_FILES[@]}"; do
 done
 
 # Stream logs to stdout 💖
-exec tail -f /var/log/apt-cacher-ng/apt-cacher.log
+exec tail -F "$LOG_DIR"/apt-cacher.log "$LOG_DIR"/error.log
