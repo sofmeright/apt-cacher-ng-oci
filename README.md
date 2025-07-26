@@ -3,31 +3,15 @@
 # apt-cacher-ng-oci (v3.7.4) — PrPlanIT Edition 🌎
 This container is a ground-up rework of `sameersbn/docker-apt-cacher-ng`, retaining only a sliver of legacy scaffolding. It exists because I, **SoFMeRight (Kai)**, needed **working stdout log streaming** in a modern OCI-compatible build — and couldn't find a single working image that did it right. So I made one. 🧠
 
-It's still the goat, just louder about it. This version includes:
+This version includes:
 - Functional container log streaming via `tail -f`
 - Runtime overrides for config like `PassThroughPattern`
 - Secure volume handling with init-based ownership
 - Graceful startup waits for logs
 
+---
+
 > Maintained by [PrPlanIT](https://prplanit.com) — Real world results for your real world expectations.
-
-### Be AWARE: This documentation is semi-placeholder... There is no public repository to pull pre-built images directly at this time.
-I may implement this soon but for the time being, I recommend:
-
-```
-# Clone the repository to your current working directory. (``cd /<somewhere>/<nice>`` first if you want.)
-git clone https://gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci.git  
-# Navigate into the downloaded repository base folder:
-cd apt-cacher-ng-oci
-# If the repository has already been downloaded, you can sync any upstream changes:
-git fetch origin
-git merge origin/master
-# Build the container image:
-docker build -t cr.pcfae.com/prplanit/apt-cacher-ng:3.7.4 .
-# Whatever name you put there you can reference in docker-compose/docker-run. 
-# For bonus points deploy a container registry locally like JFrog Container Registry or Quay.
-# A container registry will allow you to distribute docker images to hosts on your network from a central location.
-```
 
 ---
 
@@ -92,6 +76,18 @@ git clone https://gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci
 cd apt-cacher-ng-oci
 docker build -t prplanit/apt-cacher-ng-oci .
 ```
+Hint: If the repository has already been downloaded, you can sync any upstream changes:
+```
+git fetch origin
+git merge origin/master
+```
+
+For **extra** brownie points, you may deploy a container registry locally: 
+
+- **Quay** is an open source, amazing option, only caveat is no caching. 
+- **JFrog Container Registry** is freemium with its mildly restrictive community edition, it does docker caching similar to apt-cacher-ng but for docker right out of the box!
+
+> A container registry is a really nice addition to a production environemnt or homelab imho, it allows you to distribute docker images to hosts on your network from a central location on prem. Setting one up would be very complimentary to apt-cacher-ng. I won't give instruction on this bit, but you have my blessing.
 
 ## Quickstart
 
