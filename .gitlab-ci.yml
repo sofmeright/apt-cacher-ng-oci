@@ -14,7 +14,7 @@ build-image:
     echo "AntParade GitOps 🐜 - Preparing $CI_JOB_IMAGE image for build"
     echo "---------------------------------------------------------------------------"
     echo "Installing dependencies... (bash)"
-    apk add --no-cache bash docker-cli
+    apk add --no-cache bash docker docker-cli
     dockerd-entrypoint.sh &  # Start Docker daemon in background
     sleep 5                  # Give Docker time to start
   image: alpine:3.22.1
