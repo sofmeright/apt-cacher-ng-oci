@@ -20,24 +20,24 @@ NOTABLE_CHANGES=$(git tag -l --format='%(contents)' "$RELEASE" | sed '/-----BEGI
 CHANGELOG=$(git log --no-merges --pretty=format:'- [%h] %s (%aN)' "${PREV_RELEASE}..${RELEASE}")
 
 cat <<EOF
-# AntParade GitOps 🐜 - $CI_PROJECT_NAME:$CI_COMMIT_TAG Docker image.
+# AntParade GitOps 🐜 - ${CI_PROJECT_NAME}:${CI_COMMIT_TAG} Docker image.
 
 ${NOTABLE_CHANGES}
 
 ## Docker Images for prplanit/apt-cacher-ng:${RELEASE}
 
-- [docker.io](https://hub.docker.com/r/prplanit/apt-cacher-ng/tags)
+- [docker.io](https://hub.docker.com/r/prplanit/apt-cacher-ng-oci/tags)
 
 ## Installation
 
-For installation and usage instructions, please refer to the [README](https://gitlab.prplanit.com/yourgroup/yourproject/-/blob/${RELEASE}/README.md)
+For installation and usage instructions, please refer to the [README](https://gitlab.prplanit.com/prplanit/apt-cacher-ng-oci/-/blob/${RELEASE}/README.md)
 
 ## Contributing
 
 If you find this image useful, you can help:
 
 - Submit a Merge Request with new features or fixes
-- Report bugs or issues on [GitLab Issues](https://gitlab.prplanit.com/yourgroup/yourproject/-/issues)
+- Report bugs or issues on [GitLab Issues](https://gitlab.prplanit.com/prplanit/apt-cacher-ng-oci/-/issues)
 
 ## Changelog
 
