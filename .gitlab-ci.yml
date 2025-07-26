@@ -186,7 +186,6 @@ update-release-badge:
       COLOR="#dfb317"
     fi
 
-    PIPELINE_STATUS=$STATUS
     echo "🏁 Current pipeline status summary: $PIPELINE_STATUS"
 
     echo "🎨 Generating badge SVG..."
