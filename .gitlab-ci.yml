@@ -10,18 +10,13 @@ variables:
 
 build-image:
   stage: build
-  image: alpine:3.22.1
+  image: docker:24.0.5  # Docker client image
   services:
-    - docker:24.0.5-dind  # no alias needed
+    - name: docker:24.0.5-dind
+      command: ["--host=tcp://0.0.0.0:2375", "--host=unix:///var/run/docker.sock"]
   variables:
+    DOCKER_TLS_CERTDIR: ""
     DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""  # disable TLS for simplicity
-  before_script:
-    - echo "---------------------------------------------------------------------------"
-    - echo "AntParade GitOps 🐜 - Preparing $CI_JOB_IMAGE image for build"
-    - echo "---------------------------------------------------------------------------"
-    - echo "Installing dependencies... (bash, docker-cli)"
-    - apk add --no-cache bash docker-cli
   script:
     - echo "---------------------------------------------------------------------------"
     - echo "AntParade GitOps 🐜 - Building $DOCKER_IMAGE:$DOCKER_TAG"
