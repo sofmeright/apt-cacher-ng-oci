@@ -23,15 +23,21 @@ build-image:
     echo "AntParade GitOps 🐜 - Preparing $CI_JOB_IMAGE image for build tasks"
     echo "---------------------------------------------------------------------------"
     echo "Installing dependencies (bash git)..."
-    apk add --no-cache bash git
+    apk add --no-cache bash git                                                                                                                             >/dev/null
     # - ls -l "$DOCKER_CERT_PATH"  # Debug: Show certs
   script:  |
     echo "Building Docker image $DOCKER_IMAGE:$DOCKER_TAG..."
-    docker build -t "$DOCKER_IMAGE:$DOCKER_TAG" .
+    docker build -t "$DOCKER_IMAGE:$DOCKER_TAG" .                                                                                                           >/dev/null
     echo "Logging into the Docker Hub (docker.io)..."
-    echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
+    echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin                                                                   >/dev/null
     echo "Uploading $DOCKER_IMAGE:$DOCKER_TAG to the Docker Hub (docker.io)..."
-    docker push "$DOCKER_IMAGE:$DOCKER_TAG"
+    docker push "$DOCKER_IMAGE:$DOCKER_TAG"                                                                                                                 >/dev/null
+    if docker manifest inspect "$DOCKER_IMAGE:$DOCKER_TAG" > /dev/null 2>&1; then
+        echo "✅ Image $DOCKER_IMAGE:$DOCKER_TAG successfully pushed and verified."
+      else
+        echo "❌ Image push failed or is not available yet on the registry."
+        exit 1
+      fi
   rules:
     - if: $CI_COMMIT_TAG
 
@@ -41,7 +47,7 @@ create-release:
     echo "AntParade GitOps 🐜 - Preparing $CI_JOB_IMAGE image for release creation tasks"
     echo "---------------------------------------------------------------------------"
     echo "Installing dependencies (bash curl jq)..."
-    apk add --no-cache bash curl jq
+    apk add --no-cache bash curl jq                                                                                                                         >/dev/null
   image: alpine:3.22.1
   needs:
     - job: generate_release_notes
@@ -57,7 +63,7 @@ create-release:
       --form "name=Release $CI_COMMIT_TAG" \
       --form "tag_name=$CI_COMMIT_TAG" \
       --form "description=$RELEASE_NOTES" \
-      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases" || echo "Release might already exist"
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases" || echo "Release might already exist"                                                               >/dev/null
 
     DOCKER_IMAGE_LINK="https://hub.docker.com/r/$DOCKER_HUB_USERNAME/$CI_PROJECT_NAME/tags?page=1&name=$CI_COMMIT_TAG"
 
@@ -68,7 +74,27 @@ create-release:
       --request POST \
       --header "Content-Type: application/json" \
       --data "{\"name\":\"Docker Image $CI_COMMIT_TAG\",\"url\":\"$DOCKER_IMAGE_LINK\",\"link_type\":\"other\"}" \
-      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links"
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links"                                                                         >/dev/null
+    echo "🧪 Validating GitLab release creation..."
+
+    RELEASE_RESPONSE=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG")                                                                                     >/dev/null
+
+    # Try to parse the tag name from the response to verify existence
+    RELEASE_TAG=$(echo "$RELEASE_RESPONSE" | jq -r '.tag_name // empty')                                                                                    >/dev/null
+
+    if [ "$RELEASE_TAG" = "$CI_COMMIT_TAG" ]; then
+        echo ""
+        echo "🎉 ✅ GitLab release created successfully!"
+        echo "    🔖 Tag: $RELEASE_TAG"
+        echo "    🔗 ${CI_PROJECT_URL}/-/releases/$RELEASE_TAG"
+      else
+        echo ""
+        echo "❌ GitLab release validation failed!"
+        echo "🧾 Response from API:"
+        echo "$RELEASE_RESPONSE"
+        exit 1
+      fi
   stage: release
 
 generate_release_notes:
@@ -83,6 +109,25 @@ generate_release_notes:
     - tags
   script: |
     echo "Generating release notes for $DOCKER_HUB_USERNAME/$CI_PROJECT_NAME:$CI_COMMIT_TAG..."
-    apk add --no-cache git bash
+    apk add --no-cache git bash                                                                                                                             >/dev/null
     ./scripts/release-notes.sh > release.md
+    echo "🧪 Validating GitLab release asset link..."
+
+    ASSET_LINKS=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links")                                                                        >/dev/null
+
+    EXPECTED_LINK_NAME="Docker Image $CI_COMMIT_TAG"
+
+    LINK_FOUND=$(echo "$ASSET_LINKS" | jq -e --arg NAME "$EXPECTED_LINK_NAME" '.[] | select(.name == $NAME)' > /dev/null && echo "yes" || echo "no")        >/dev/null
+
+    if [ "$LINK_FOUND" = "yes" ]; then
+      echo ""
+      echo "🔗 ✅ Asset link '$EXPECTED_LINK_NAME' created successfully!"
+    else
+      echo ""
+      echo "❌ Asset link '$EXPECTED_LINK_NAME' not found!"
+      echo "🔍 Full asset links response:"
+      echo "$ASSET_LINKS"
+      exit 1
+    fi
   stage: release
