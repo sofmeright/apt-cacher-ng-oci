@@ -150,13 +150,15 @@ update-release-badge:
 
     echo "🔍 Checking current pipeline job statuses..."
     JOB_STATUSES=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/jobs" | jq -r '.[].status')
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/jobs" | \
+      jq -r '.[] | select(.name != "update-release-badge") | \
+      .status')
 
     ALL_SUCCESS=true
     ANY_FAILED=false
     ANY_RUNNING=false
 
-    printf '%s\n' "$JOB_STATUSES" | while IFS= read -r status; do
+    while IFS= read -r status; do
       case "$status" in
         failed)
           ANY_FAILED=true
@@ -167,13 +169,12 @@ update-release-badge:
           ALL_SUCCESS=false
           ;;
         success)
-          # all good
           ;;
         *)
           ALL_SUCCESS=false
           ;;
       esac
-    done
+    done <<< "$JOB_STATUSES"
 
     if [ "$ALL_SUCCESS" = true ]; then
       STATUS="passed"
@@ -203,8 +204,8 @@ update-release-badge:
 
     FILE_PATH="assets/badge-release-status.svg"
     ENCODED_FILE_PATH=$(echo "$FILE_PATH" | sed 's/\//%2F/g')
-
-    curl --request PUT --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+    
+    API_RESPONSE=$(curl --silent --write-out "\n%{http_code}" --request PUT --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
       --header "Content-Type: application/json" \
       --data "{
         \"branch\": \"main\",
@@ -212,7 +213,21 @@ update-release-badge:
         \"commit_message\": \"Update release badge for $CI_COMMIT_TAG\",
         \"encoding\": \"base64\"
       }" \
-      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/files/$ENCODED_FILE_PATH"
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/files/$ENCODED_FILE_PATH")
+
+    HTTP_CODE=$(echo "$API_RESPONSE" | tail -n1)
+    BODY=$(echo "$API_RESPONSE" | sed '$d')
+
+    echo "GitLab API HTTP code: $HTTP_CODE"
+    echo "GitLab API response: $BODY"
+
+    if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+      echo "✅ Badge updated successfully in repository."
+    else
+      echo "❌ Failed to update badge in repository."
+      echo "$BODY"
+      exit 1
+    fi
   artifacts:
     paths:
       - assets/badge-release-status.svg
