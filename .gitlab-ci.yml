@@ -20,7 +20,7 @@ build-image:
       alias: docker
   before_script:
     - echo "Preparing Docker build..."
-    - apk add --no-cache bash
+    - apk add --no-cache bash git
     - ls -l "$DOCKER_CERT_PATH"  # Debug: Show certs
   script:
     - echo "Building Docker image $DOCKER_IMAGE:$DOCKER_TAG..."
