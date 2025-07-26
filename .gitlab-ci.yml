@@ -34,42 +34,29 @@ build-image:
 create-release:
   stage: release
   image: alpine:3.22.1
-  before_script: |
+  before_script:  |
     echo "---------------------------------------------------------------------------"
     echo "AntParade GitOps 🐜 - Preparing $CI_JOB_IMAGE image for release upload tasks"
     echo "---------------------------------------------------------------------------"
     echo "Installing dependencies... (bash curl jq)"
     apk add --no-cache bash curl jq
-  script: |
+  script:  |
     echo "Creating GitLab release for tag $CI_COMMIT_TAG..."
-    
+    curl --header "PRIVATE-TOKEN: $GITLAB_TOKEN" --request POST \
+      --form "name=Release $CI_COMMIT_TAG" \
+      --form "tag_name=$CI_COMMIT_TAG" \
+      --form "description=AntParade GitOps 🐜 - $CI_PROJECT_NAME:$CI_COMMIT_TAG Docker image." \
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases" || echo "Release might already exist"    # Add Docker Hub release asset link
+
     DOCKER_IMAGE_LINK="https://hub.docker.com/r/$DOCKER_HUB_USERNAME/$CI_PROJECT_NAME/tags?page=1&name=$CI_COMMIT_TAG"
 
-    # Read and escape release notes
-    if [ -f release.md ]; then
-      RELEASE_NOTES=$(jq -Rs . < release.md)
-    else
-      RELEASE_NOTES="\"AntParade GitOps 🐜 - Release notes not found.\""
-    fi
+    echo "✅ Docker image assumed pushed: $DOCKER_IMAGE_LINK"
 
-    # Create release with link
     curl --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
       --request POST \
       --header "Content-Type: application/json" \
-      --data "{
-        \"name\": \"Release $CI_COMMIT_TAG\",
-        \"tag_name\": \"$CI_COMMIT_TAG\",
-        \"description\": $RELEASE_NOTES,
-        \"assets\": {
-          \"links\": [
-            {
-              \"name\": \"Docker Image $CI_COMMIT_TAG\",
-              \"url\": \"$DOCKER_IMAGE_LINK\"
-            }
-          ]
-        }
-      }" \
-      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases"
+      --data "{\"name\":\"Docker Image $CI_COMMIT_TAG\",\"url\":\"$DOCKER_IMAGE_LINK\",\"link_type\":\"other\"}" \
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links"
   rules:
     - if: $CI_COMMIT_TAG
 
