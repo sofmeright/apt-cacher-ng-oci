@@ -172,7 +172,7 @@ update-release-badge:
         ;;
     esac
 
-    cat <<EOF > .badges/release-status.svg
+    cat <<'EOF' > .badges/release-status.svg
 <svg xmlns="http://www.w3.org/2000/svg" width="160" height="20">
   <rect width="160" height="20" fill="#555"/>
   <rect x="100" width="60" height="20" fill="${COLOR}"/>
