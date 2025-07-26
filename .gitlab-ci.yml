@@ -22,6 +22,8 @@ build-image:
   before_script:
     - echo "Preparing Docker build..."
     - apk add --no-cache bash
+    - mkdir -p ~/.docker
+    - cp /certs/client/* ~/.docker/
   script:
     - echo "Building Docker image $DOCKER_IMAGE:$DOCKER_TAG..."
     - ls -l /certs/client
