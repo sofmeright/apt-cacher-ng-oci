@@ -183,7 +183,7 @@ update-release-badge:
 
     echo "🚀 Uploading badge to repository via GitLab API..."
 
-    curl --request PUT --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+    curl --request PUT --header "PRIVATE-TOKEN: $GITLAB_TOKEN_PROTECTED" \
       --header "Content-Type: application/json" \
       --data "{
         \"branch\": \"main\",
