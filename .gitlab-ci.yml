@@ -187,5 +187,8 @@ update-release-badge:
     paths:
       - assets/badge-release-status.svg
     expire_in: 1 hour
+  needs:
+    - job: create-release
+      artifacts: false
   only:
     - tags
