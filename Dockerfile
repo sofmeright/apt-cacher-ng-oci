@@ -14,8 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 
 # Patch config: set ForeGround mode and passthrough pattern
-RUN sed -i 's|# ForeGround: .*|ForeGround: 1|' /etc/apt-cacher-ng/acng.conf \
- && sed -i 's|# PassThroughPattern: .*|PassThroughPattern: '"${PASS_THROUGH_PATTERN}"'|' /etc/apt-cacher-ng/acng.conf
+RUN sed -i 's|^# LogDir:.*|LogDir: /var/log/apt-cacher-ng|' /etc/apt-cacher-ng/acng.conf && \
+    echo "VerboseLog: 1" >> /etc/apt-cacher-ng/acng.conf && \
+    echo "Debug: 1" >> /etc/apt-cacher-ng/acng.conf
 
 COPY entrypoint.sh /sbin/entrypoint.sh
 RUN chmod +x /sbin/entrypoint.sh
