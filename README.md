@@ -3,6 +3,14 @@
 # apt-cacher-ng-oci (v3.7.4) — PrPlanIT Edition 🌎
 This container is a ground-up rework of `sameersbn/docker-apt-cacher-ng`, retaining only a sliver of legacy scaffolding. It exists because I, **SoFMeRight (Kai)**, needed **working stdout log streaming** in a modern OCI-compatible build — and couldn't find a single working image that did it right. So I made one. 🧠
 
+It's still the goat, just louder about it. This version includes:
+- Functional container log streaming via `tail -f`
+- Runtime overrides for config like `PassThroughPattern`
+- Secure volume handling with init-based ownership
+- Graceful startup waits for logs
+
+> Maintained by [PrPlanIT](https://prplanit.com) — Real world results for your real world expectations.
+
 ### Be AWARE: This documentation is semi-placeholder... There is no public repository to pull pre-built images directly at this time.
 I may implement this soon but for the time being, I recommend:
 
@@ -20,14 +28,6 @@ docker build -t cr.pcfae.com/prplanit/apt-cacher-ng:3.7.4 .
 # For bonus points deploy a container registry locally like JFrog Container Registry or Quay.
 # A container registry will allow you to distribute docker images to hosts on your network from a central location.
 ```
-
-It's still the goat, just louder about it. This version includes:
-- Functional container log streaming via `tail -f`
-- Runtime overrides for config like `PassThroughPattern`
-- Secure volume handling with init-based ownership
-- Graceful startup waits for logs
-
-> Maintained by [PrPlanIT](https://prplanit.com) — Real world results for your real world expectations.
 
 ---
 
