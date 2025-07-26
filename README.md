@@ -1,4 +1,4 @@
-[![Latest Release](https://gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci/-/badges/release.svg)](https://gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci/-/releases) [![pipeline status](https://gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci/badges/main/pipeline.svg)](https://gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci/-/commits/main)
+[![Latest Release](https://gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci/-/badges/release.svg)](https://gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci/-/releases) ![Latest Release Status](https://gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci/-/raw/main/release-status.svg)
 
 # apt-cacher-ng-oci (v3.7.4) — PrPlanIT Edition 🌎
 This container is inspired by other work such as `sameersbn/docker-apt-cacher-ng`, retaining only a sliver of legacy scaffolding. It exists because I, **SoFMeRight (Kai)**, needed **working stdout log streaming** in a modern OCI-compatible build — and couldn't find a single working image that did it right. So I made one. 🧠

@@ -140,3 +140,58 @@ generate_release_notes:
       head -n 10 release.md  # Show first 10 lines
     fi
   stage: release
+
+update-latest-release-status-badge:
+  stage: release
+  image: alpine:3.22.1
+  only:
+    - tags
+  script: |
+    echo "Generating release status badge for tag: $CI_COMMIT_TAG"
+
+    apk add --no-cache git bash curl jq >/dev/null
+
+    echo "Fetching latest pipeline status for this tag..."
+    PIPELINE_STATUS=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines?ref=$CI_COMMIT_TAG" \
+      | jq -r '.[0].status')
+
+    echo "Pipeline status: $PIPELINE_STATUS"
+
+    mkdir -p .badges
+
+    case "$PIPELINE_STATUS" in
+      success)
+        STATUS="passed"
+        COLOR="#4c1"
+        ;;
+      failed)
+        STATUS="failed"
+        COLOR="#e05d44"
+        ;;
+      *)
+        STATUS="$PIPELINE_STATUS"
+        COLOR="#dfb317" # yellow for unknowns
+        ;;
+    esac
+
+    cat <<EOF > .badges/release-status.svg
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="20">
+  <rect width="160" height="20" fill="#555"/>
+  <rect x="100" width="60" height="20" fill="$COLOR"/>
+  <text x="5" y="14" fill="#fff" font-family="Verdana" font-size="11">release</text>
+  <text x="105" y="14" fill="#fff" font-family="Verdana" font-size="11">$STATUS</text>
+</svg>
+EOF
+
+    echo "Committing badge to main branch..."
+
+    git config --global user.email "ci-bot@gitlab.com"
+    git config --global user.name "GitLab CI"
+    git fetch origin main
+    git checkout main
+    mkdir -p .badges
+    cp .badges/release-status.svg .
+    git add release-status.svg
+    git commit -m "🔖 Update release status badge for $CI_COMMIT_TAG" || echo "No changes to commit"
+    git push origin main || echo "⚠️ Failed to push badge — check permissions"
