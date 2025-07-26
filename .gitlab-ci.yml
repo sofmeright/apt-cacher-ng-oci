@@ -19,11 +19,7 @@ build-image:
   - name: docker:dind
     alias: dind
     command:
-      - "--tlsverify"
-      - "--host=tcp://0.0.0.0:2376"
-      - "--tlscacert=/certs/ca.pem"
-      - "--tlscert=/certs/cert.pem"
-      - "--tlskey=/certs/key.pem"
+      - "--tlsverify" "--host=tcp://0.0.0.0:2376" "--tlscacert=/certs/ca.pem" "--tlscert=/certs/cert.pem" "--tlskey=/certs/key.pem"
     volumes:
       - /certs/client
   before_script:
