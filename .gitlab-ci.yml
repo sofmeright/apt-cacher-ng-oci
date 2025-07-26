@@ -145,71 +145,71 @@ update-release-badge:
   stage: release
   image: alpine:3.22.1
   script: |
-    set -e
-    apk add --no-cache curl jq bash coreutils
+    - bash <<'EOF'
+set -e
+apk add --no-cache curl jq coreutils
 
-    echo "🔍 Checking current pipeline job statuses..."
-    JOB_STATUSES=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/jobs" \
-      | jq -r '.[] | select(.name != "update-release-badge") | .status')
+echo "🔍 Checking current pipeline job statuses..."
+JOB_STATUSES=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+  "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/jobs" \
+  | jq -r '.[] | select(.name != "update-release-badge") | .status')
 
-    ALL_SUCCESS=true
-    ANY_FAILED=false
-    ANY_RUNNING=false
+ALL_SUCCESS=true
+ANY_FAILED=false
+ANY_RUNNING=false
 
-    while IFS= read -r status; do
-      case "$status" in
-        failed)
-          ANY_FAILED=true
-          ALL_SUCCESS=false
-          ;;
-        running|pending)
-          ANY_RUNNING=true
-          ALL_SUCCESS=false
-          ;;
-        success)
-          # all good
-          ;;
-        *)
-          ALL_SUCCESS=false
-          ;;
-      esac
-    done <<< "$JOB_STATUSES"
+while IFS= read -r status; do
+  case "$status" in
+    failed)
+      ANY_FAILED=true
+      ALL_SUCCESS=false
+      ;;
+    running|pending)
+      ANY_RUNNING=true
+      ALL_SUCCESS=false
+      ;;
+    success)
+      ;;
+    *)
+      ALL_SUCCESS=false
+      ;;
+  esac
+done <<< "$JOB_STATUSES"
 
-    if [ "$ALL_SUCCESS" = true ]; then
-      STATUS="passed"
-      COLOR="#4c1"
-    elif [ "$ANY_FAILED" = true ]; then
-      STATUS="failed"
-      COLOR="#e05d44"
-    else
-      STATUS="running"
-      COLOR="#dfb317"
-    fi
+if [ "$ALL_SUCCESS" = true ]; then
+  STATUS="passed"
+  COLOR="#4c1"
+elif [ "$ANY_FAILED" = true ]; then
+  STATUS="failed"
+  COLOR="#e05d44"
+else
+  STATUS="running"
+  COLOR="#dfb317"
+fi
 
-    echo "🏁 Current pipeline status summary: $STATUS"
+echo "🏁 Current pipeline status summary: $STATUS"
+echo "🎨 Generating badge SVG..."
 
-    echo "🎨 Generating badge SVG..."
-    mkdir -p assets
-    sed -e "s|{{COLOR}}|$COLOR|g" -e "s|{{STATUS}}|$STATUS|g" assets/badge-release-generic.svg > assets/badge-release-status.svg
+mkdir -p assets
+sed -e "s|{{COLOR}}|$COLOR|g" -e "s|{{STATUS}}|$STATUS|g" assets/badge-release-generic.svg > assets/badge-release-status.svg
 
-    # Encode file as base64
-    CONTENT_BASE64=$(base64 -w 0 assets/badge-release-status.svg)
+echo "🚀 Uploading badge to repository via GitLab API..."
 
-    echo "🚀 Uploading badge to repository via GitLab API..."
+CONTENT_BASE64=$(base64 -w 0 assets/badge-release-status.svg)
 
-    FILE_PATH="assets/badge-release-status.svg"
-    ENCODED_FILE_PATH=$(echo "$FILE_PATH" | sed 's/\//%2F/g')
+FILE_PATH="assets/badge-release-status.svg"
+ENCODED_FILE_PATH=$(echo "$FILE_PATH" | sed 's/\//%2F/g')
 
-    curl --request PUT --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-      --header "Content-Type: application/json" \
-      --data "{
-        \"branch\": \"main\",
-        \"content\": \"$CONTENT_BASE64\",
-        \"commit_message\": \"Update release badge for $LATEST_TAG\",
-        \"encoding\": \"base64\"
-      }" \
-      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/files/$ENCODED_FILE_PATH"
+curl --request PUT --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+  --header "Content-Type: application/json" \
+  --data "{
+    \"branch\": \"main\",
+    \"content\": \"$CONTENT_BASE64\",
+    \"commit_message\": \"Update release badge\",
+    \"encoding\": \"base64\"
+  }" \
+  "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/files/$ENCODED_FILE_PATH"
+EOF
   artifacts:
     paths:
       - assets/badge-release-status.svg
