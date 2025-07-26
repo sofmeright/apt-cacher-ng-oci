@@ -148,7 +148,7 @@ update-release-badge:
     set -e
 
     echo "Installing dependencies..."
-    apk add --no-cache curl jq git bash
+    apk add --no-cache bash curl git jq tree
 
     LATEST_TAG=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/tags" | jq -r '.[0].name')
     PIPELINE_STATUS=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines?ref=$LATEST_TAG" | jq -r '.[0].status')
@@ -170,6 +170,8 @@ update-release-badge:
         STATUS="$PIPELINE_STATUS"
         ;;
     esac
+
+    tree
 
     git config --global user.email "sofmeright@gmail.com"
     git config --global user.name "SoFMeRight"
