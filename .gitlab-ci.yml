@@ -18,8 +18,6 @@ build-image:
   services:
   - name: docker:dind
     alias: dind
-    volumes:
-      - /certs/client
   before_script:
     - docker info
   script:
