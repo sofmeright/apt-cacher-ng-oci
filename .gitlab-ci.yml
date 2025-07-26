@@ -22,7 +22,7 @@ build-image:
     echo "---------------------------------------------------------------------------"
     echo "AntParade GitOps 🐜 - Preparing $CI_JOB_IMAGE image for build tasks"
     echo "---------------------------------------------------------------------------"
-    echo Installing dependencies (bash git)...
+    echo "Installing dependencies (bash git)..."
     - apk add --no-cache bash git
     # - ls -l "$DOCKER_CERT_PATH"  # Debug: Show certs
   script:  |
