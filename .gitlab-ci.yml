@@ -183,6 +183,15 @@ update-release-badge:
     echo "Final badge output:"
     head -n 20 assets/badge-release-status.svg
 
+    git config --global user.email "sofmeright@gmail.com"
+    git config --global user.name "SoFMeRight"
+
+    git checkout main
+    git pull origin main
+
+    git add assets/badge-release-status.svg
+    git commit -m "Update release status badge for $LATEST_TAG"
+    git push origin main
   artifacts:
     paths:
       - assets/badge-release-status.svg
