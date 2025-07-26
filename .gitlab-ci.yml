@@ -24,6 +24,7 @@ build-image:
     - apk add --no-cache bash
   script:
     - echo "Building Docker image $DOCKER_IMAGE:$DOCKER_TAG..."
+    - ls -l /
     - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
     - echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
     - docker push $DOCKER_IMAGE:$DOCKER_TAG
