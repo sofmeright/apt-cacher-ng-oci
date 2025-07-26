@@ -1,41 +1,35 @@
 #!/bin/bash
 set -e
 
-create_pid_dir() {
-  mkdir -p /run/apt-cacher-ng
-  chmod -R 0755 /run/apt-cacher-ng
-  chown ${APT_CACHER_NG_USER}:${APT_CACHER_NG_USER} /run/apt-cacher-ng
-}
+CACHE_DIR="${APT_CACHER_NG_CACHE_DIR}"
+LOG_DIR="${APT_CACHER_NG_LOG_DIR}"
 
-create_cache_dir() {
-  mkdir -p ${APT_CACHER_NG_CACHE_DIR}
-  chmod -R 0755 ${APT_CACHER_NG_CACHE_DIR}
-  chown -R ${APT_CACHER_NG_USER}:root ${APT_CACHER_NG_CACHE_DIR}
-}
+# Ensure required directories exist
+mkdir -p /run/apt-cacher-ng "$CACHE_DIR" "$LOG_DIR"
+chown -R "$APT_CACHER_NG_USER:$APT_CACHER_NG_USER" /run/apt-cacher-ng "$CACHE_DIR" "$LOG_DIR"
 
-create_log_dir() {
-  mkdir -p ${APT_CACHER_NG_LOG_DIR}
-  chmod -R 0755 ${APT_CACHER_NG_LOG_DIR}
-  chown -R ${APT_CACHER_NG_USER}:${APT_CACHER_NG_USER} ${APT_CACHER_NG_LOG_DIR}
-}
-
-create_pid_dir
-create_cache_dir
-create_log_dir
-
-# allow arguments to be passed to apt-cacher-ng
-if [[ ${1:0:1} = '-' ]]; then
-  EXTRA_ARGS="$@"
-  set --
-elif [[ ${1} == apt-cacher-ng || ${1} == $(command -v apt-cacher-ng) ]]; then
-  EXTRA_ARGS="${@:2}"
-  set --
+# Optional: allow override of PassThroughPattern at runtime
+if [[ -n "${PASS_THROUGH_PATTERN}" ]]; then
+  sed -i "s|^PassThroughPattern:.*|PassThroughPattern: ${PASS_THROUGH_PATTERN}|" /etc/apt-cacher-ng/acng.conf
 fi
 
-# default behaviour is to launch apt-cacher-ng
-if [[ -z ${1} ]]; then
-  exec start-stop-daemon --start --chuid ${APT_CACHER_NG_USER}:${APT_CACHER_NG_USER} \
-    --exec "$(command -v apt-cacher-ng)" -- -c /etc/apt-cacher-ng ${EXTRA_ARGS}
-else
-  exec "$@"
-fi
+# Ensure required directories exist
+mkdir -p /run/apt-cacher-ng "$CACHE_DIR" "$LOG_DIR"
+chown -R "$APT_CACHER_NG_USER:$APT_CACHER_NG_USER" /run/apt-cacher-ng "$CACHE_DIR" "$LOG_DIR"
+
+# Pre-create log files to prevent race conditions
+touch "$LOG_DIR/apt-cacher.log" "$LOG_DIR/error.log"
+chown "$APT_CACHER_NG_USER:$APT_CACHER_NG_USER" "$LOG_DIR"/*.log
+
+# Start apt-cacher-ng in foreground as proper user
+gosu "$APT_CACHER_NG_USER" /usr/sbin/apt-cacher-ng -c /etc/apt-cacher-ng ForeGround=1 &
+
+# Wait for log files to appear (gracefully)
+LOG_FILES=("$LOG_DIR/apt-cacher.log" "$LOG_DIR/error.log")
+for file in "${LOG_FILES[@]}"; do
+  echo "Waiting for log file $file to appear..."
+  while [ ! -f "$file" ]; do sleep 0.5; done
+done
+
+# Stream logs to stdout 💖
+exec tail -f /var/log/apt-cacher-ng/apt-cacher.log
