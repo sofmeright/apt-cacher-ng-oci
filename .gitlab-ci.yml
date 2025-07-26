@@ -10,20 +10,24 @@ variables:
 
 build-image:
   stage: build
-  image: alpine:3.22.1  # Ignored by shell executor, but harmless
+  image: docker:24.0.5  # Docker client + bash included
+  services:
+    - name: docker:dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
   rules:
     - if: $CI_COMMIT_TAG
   before_script:
     - echo "---------------------------------------------------------------------------"
-    - echo "AntParade GitOps 🐜 - Preparing shell environment for build"
+    - echo "AntParade GitOps 🐜 - Preparing Docker build environment"
     - echo "---------------------------------------------------------------------------"
-    - echo "Installing dependencies... (bash, docker-cli)"
-    - apk add --no-cache bash docker-cli || true  # no-op if already installed
   script:
     - echo "---------------------------------------------------------------------------"
     - echo "AntParade GitOps 🐜 - Building $DOCKER_IMAGE:$DOCKER_TAG"
     - echo "---------------------------------------------------------------------------"
-    - docker info  # This talks to host Docker daemon
+    - docker info
     - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
     - echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
     - docker push $DOCKER_IMAGE:$DOCKER_TAG
