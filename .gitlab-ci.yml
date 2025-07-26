@@ -23,7 +23,7 @@ build-image:
     echo "AntParade GitOps 🐜 - Preparing $CI_JOB_IMAGE image for build tasks"
     echo "---------------------------------------------------------------------------"
     echo "Installing dependencies (bash git)..."
-    - apk add --no-cache bash git
+    apk add --no-cache bash git
     # - ls -l "$DOCKER_CERT_PATH"  # Debug: Show certs
   script:  |
     echo "Building Docker image $DOCKER_IMAGE:$DOCKER_TAG..."
@@ -76,13 +76,13 @@ generate_release_notes:
     paths:
       - release.md
     expire_in: 1 hour
-  before_script:
-    - chmod +x ./scripts/release-notes.sh
+  before_script: |
+    chmod +x ./scripts/release-notes.sh
   image: alpine:3.22.1
   only:
     - tags
   script: |
     echo "Generating release notes for $DOCKER_HUB_USERNAME/$CI_PROJECT_NAME:$CI_COMMIT_TAG..."
-    - apk add --no-cache git bash
-    - ./scripts/release-notes.sh > release.md
+    apk add --no-cache git bash
+    ./scripts/release-notes.sh > release.md
   stage: release
