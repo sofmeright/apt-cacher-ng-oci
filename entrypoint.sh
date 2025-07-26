@@ -1,24 +1,27 @@
 #!/bin/bash
 set -e
 
-# Create necessary directories with correct ownership and permissions
-create_dirs() {
-  mkdir -p /run/apt-cacher-ng "${APT_CACHER_NG_CACHE_DIR}" "${APT_CACHER_NG_LOG_DIR}"
-  chown -R "${APT_CACHER_NG_USER}:${APT_CACHER_NG_USER}" /run/apt-cacher-ng "${APT_CACHER_NG_CACHE_DIR}" "${APT_CACHER_NG_LOG_DIR}"
-}
+CACHE_DIR="${APT_CACHER_NG_CACHE_DIR}"
+LOG_DIR="${APT_CACHER_NG_LOG_DIR}"
 
-create_dirs
+# Ensure required directories exist
+mkdir -p /run/apt-cacher-ng "$CACHE_DIR" "$LOG_DIR"
+chown -R "$APT_CACHER_NG_USER:$APT_CACHER_NG_USER" /run/apt-cacher-ng "$CACHE_DIR" "$LOG_DIR"
 
-# Allow runtime override of PassThroughPattern via environment variable (optional)
+# Optional: allow override of PassThroughPattern at runtime
 if [[ -n "${PASS_THROUGH_PATTERN}" ]]; then
   sed -i "s|^PassThroughPattern:.*|PassThroughPattern: ${PASS_THROUGH_PATTERN}|" /etc/apt-cacher-ng/acng.conf
 fi
 
-# Start apt-cacher-ng in foreground as apt-cacher-ng user
-exec su-exec ${APT_CACHER_NG_USER} /usr/sbin/apt-cacher-ng -c /etc/apt-cacher-ng ForeGround=1 &
+# Start apt-cacher-ng in foreground as proper user
+gosu "$APT_CACHER_NG_USER" /usr/sbin/apt-cacher-ng -c /etc/apt-cacher-ng ForeGround=1 &
 
-# Wait a moment to ensure log files are created
-sleep 1
+# Wait for log files to appear (gracefully)
+LOG_FILES=("$LOG_DIR/apt-cacher.log" "$LOG_DIR/error.log")
+for file in "${LOG_FILES[@]}"; do
+  echo "Waiting for log file $file to appear..."
+  while [ ! -f "$file" ]; do sleep 0.5; done
+done
 
-# Tail logs to stdout (container logs)
-exec tail -F "${APT_CACHER_NG_LOG_DIR}/apt-cacher.log" "${APT_CACHER_NG_LOG_DIR}/error.log"
+# Stream logs to stdout
+exec tail -F "${LOG_FILES[@]}"
