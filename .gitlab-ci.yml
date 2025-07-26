@@ -6,7 +6,7 @@ variables:
   DOCKER_HOST: "tcp://docker:2376"
   DOCKER_TLS_VERIFY: "1"
   DOCKER_CERT_PATH: "/certs/client"
-  DOCKER_IMAGE: "prplanit/apt-cacher-ng"
+  DOCKER_IMAGE: "prplanit/apt-cacher-ng-oci"
   DOCKER_TAG: "$CI_COMMIT_TAG"
   GIT_TAG: "$CI_COMMIT_TAG"
   GITLAB_DOMAIN: "https://gitlab.prplanit.com"
