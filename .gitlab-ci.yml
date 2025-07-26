@@ -188,4 +188,4 @@ update-release-badge:
       - assets/badge-release-status.svg
     expire_in: 1 hour
   only:
-    - main
+    - tags
