@@ -9,25 +9,30 @@ variables:
   GIT_TAG: "$CI_COMMIT_TAG"
 
 build-image:
-  before_script:  |
-    echo "---------------------------------------------------------------------------"
-    echo "AntParade GitOps 🐜 - Preparing $CI_JOB_IMAGE image for build"
-    echo "---------------------------------------------------------------------------"
-    echo "Installing dependencies... (bash)"
-    apk add --no-cache bash docker # docker-cli
-    # dockerd-entrypoint.sh &  # Start Docker daemon in background
-    sleep 5                  # Give Docker time to start
+  before_script:
+    - echo "---------------------------------------------------------------------------"
+    - echo "AntParade GitOps 🐜 - Preparing $CI_JOB_IMAGE image for build"
+    - echo "---------------------------------------------------------------------------"
+    - echo "Installing dependencies... (bash, docker)"
+    - apk add --no-cache bash docker-cli
   image: alpine:3.22.1
   rules:
     - if: $CI_COMMIT_TAG
-  script: |
-    echo "---------------------------------------------------------------------------"
-    echo "AntParade GitOps 🐜 - Building $DOCKER_IMAGE:$DOCKER_TAG"
-    echo "---------------------------------------------------------------------------"
-    docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
-    echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
-    docker push $DOCKER_IMAGE:$DOCKER_TAG
+  script:
+    - echo "---------------------------------------------------------------------------"
+    - echo "AntParade GitOps 🐜 - Building $DOCKER_IMAGE:$DOCKER_TAG"
+    - echo "---------------------------------------------------------------------------"
+    - docker info  # ✅ Optional sanity check
+    - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+    - echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
+    - docker push $DOCKER_IMAGE:$DOCKER_TAG
+  services:
+    - name: docker:24.0.5-dind
+      alias: docker
   stage: build
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""  # disables TLS since we're connecting in plain TCP
 
 create-release:
   stage: release
