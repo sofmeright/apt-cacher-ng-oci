@@ -148,16 +148,50 @@ update-release-badge:
     set -e
     apk add --no-cache curl jq bash coreutils
 
-    echo "🔍 Fetching latest release tag..."
-    LATEST_TAG=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/tags" | jq -r '.[0].name')
+    echo "🔍 Checking current pipeline job statuses..."
+    JOB_STATUSES=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/jobs" | jq -r '.[].status')
 
-    echo "🔍 Fetching pipeline status for $LATEST_TAG..."
-    PIPELINE_STATUS=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines?ref=$LATEST_TAG" | jq -r '.[0].status')
+    echo "All job statuses:"
+    echo "$JOB_STATUSES"
 
-    echo "Latest tag: $LATEST_TAG"
-    echo "Pipeline status: $PIPELINE_STATUS"
+    ALL_SUCCESS=true
+    ANY_FAILED=false
+    ANY_RUNNING=false
+
+    while IFS= read -r status; do
+      case "$status" in
+        failed)
+          ANY_FAILED=true
+          ALL_SUCCESS=false
+          ;;
+        running|pending)
+          ANY_RUNNING=true
+          ALL_SUCCESS=false
+          ;;
+        success)
+          # all good
+          ;;
+        *)
+          ALL_SUCCESS=false
+          ;;
+      esac
+    done <<< "$JOB_STATUSES"
+
+    # Decide badge status
+    if [ "$ALL_SUCCESS" = true ]; then
+      STATUS="passed"
+      COLOR="#4c1"
+    elif [ "$ANY_FAILED" = true ]; then
+      STATUS="failed"
+      COLOR="#e05d44"
+    else
+      STATUS="running"
+      COLOR="#dfb317"
+    fi
+
+    PIPELINE_STATUS=$STATUS
+    echo "🏁 Current pipeline overall status: $STATUS"
 
     case "$PIPELINE_STATUS" in
       success)
@@ -186,7 +220,7 @@ update-release-badge:
     FILE_PATH="assets/badge-release-status.svg"
     ENCODED_FILE_PATH=$(echo "$FILE_PATH" | sed 's/\//%2F/g')
 
-    curl --request PUT --header "PRIVATE-TOKEN: $GITLAB_TOKEN_PROTECTED" \
+    curl --request PUT --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
       --header "Content-Type: application/json" \
       --data "{
         \"branch\": \"main\",
