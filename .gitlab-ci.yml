@@ -4,8 +4,9 @@ stages:
 
 variables:
   DOCKER_CERT_PATH: "/certs/client"
-  DOCKER_IMAGE: "prplanit/apt-cacher-ng"
+  DOCKER_DNS: "127.0.0.1"
   DOCKER_HOST: tcp://dind:2376
+  DOCKER_IMAGE: "prplanit/apt-cacher-ng"
   DOCKER_TLS_VERIFY: "1"
   GITLAB_DOMAIN: "https://gitlab.prplanit.com"
   DOCKER_TAG: "$CI_COMMIT_TAG"
