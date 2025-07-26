@@ -189,21 +189,6 @@ update-release-badge:
     PIPELINE_STATUS=$STATUS
     echo "🏁 Current pipeline status summary: $PIPELINE_STATUS"
 
-    case "$PIPELINE_STATUS" in
-      success)
-        COLOR="#4c1"
-        STATUS="passed"
-        ;;
-      failed)
-        COLOR="#e05d44"
-        STATUS="failed"
-        ;;
-      *)
-        COLOR="#dfb317"
-        STATUS="$PIPELINE_STATUS"
-        ;;
-    esac
-
     echo "🎨 Generating badge SVG..."
     mkdir -p assets
     sed -e "s|{{COLOR}}|$COLOR|g" -e "s|{{STATUS}}|$STATUS|g" assets/badge-release-generic.svg > assets/badge-release-status.svg
