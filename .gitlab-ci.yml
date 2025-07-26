@@ -148,12 +148,11 @@ update-release-badge:
     echo "Installing dependencies..."
     apk add --no-cache curl jq git bash
 
-    echo "Fetching latest tagged pipeline status..."
     LATEST_TAG=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/tags" | jq -r '.[0].name')
 
-    PIPELINE_ID=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/commits/$LATEST_TAG/statuses" | jq -r '.[0].id')
-    PIPELINE_STATUS=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$PIPELINE_ID" | jq -r '.status')
+    PIPELINE_STATUS=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines?ref=$LATEST_TAG" | jq -r '.[0].status')
 
+    echo "Determined latest tag: $LATEST_TAG"
     echo "Pipeline status for $LATEST_TAG: $PIPELINE_STATUS"
 
     # Set color and status text
