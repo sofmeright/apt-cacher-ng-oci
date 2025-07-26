@@ -32,8 +32,6 @@ build-image:
     - if: $CI_COMMIT_TAG
 
 create-release:
-  dependencies:
-    - generate_release_notes
   before_script:  |
     echo "---------------------------------------------------------------------------"
     echo "AntParade GitOps 🐜 - Preparing $CI_JOB_IMAGE image for release upload tasks"
@@ -41,6 +39,9 @@ create-release:
     echo "Installing dependencies... (bash curl jq)"
     apk add --no-cache bash curl jq
   image: alpine:3.22.1
+  needs:
+    - job: generate_release_notes
+      artifacts: true
   script:  |
     echo "Reading changelog..."
     RELEASE_NOTES=$(cat release.md)
