@@ -1,8 +1,63 @@
+stages:
+  - build
+  - release
+
 variables:
+  GITLAB_DOMAIN: "https://gitlab.prplanit.com"
+  DOCKER_IMAGE: "prplanit/apt-cacher-ng"
+  DOCKER_TAG: "$CI_COMMIT_TAG"
   GIT_TAG: "$CI_COMMIT_TAG"
 
+build-image:
+  before_script:  |
+    echo "---------------------------------------------------------------------------"
+    echo "AntParade GitOps 🐜 - Preparing $CI_JOB_IMAGE image for build"
+    echo "---------------------------------------------------------------------------"
+    echo "Installing dependencies... (bash)"
+    apk add --no-cache bash docker-cli
+    dockerd-entrypoint.sh &  # Start Docker daemon in background
+    sleep 5                  # Give Docker time to start
+  image: alpine:3.22.1
+  rules:
+    - if: $CI_COMMIT_TAG
+  script: |
+    echo "---------------------------------------------------------------------------"
+    echo "AntParade GitOps 🐜 - Building $DOCKER_IMAGE:$DOCKER_TAG"
+    echo "---------------------------------------------------------------------------"
+    docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+    echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
+    docker push $DOCKER_IMAGE:$DOCKER_TAG
+  stage: build
+
+create-release:
+  stage: release
+  image: alpine:3.22.1
+  before_script:  |
+    echo "---------------------------------------------------------------------------"
+    echo "AntParade GitOps 🐜 - Preparing $CI_JOB_IMAGE image for release upload tasks"
+    echo "---------------------------------------------------------------------------"
+    echo "Installing dependencies... (bash curl jq)"
+    apk add --no-cache bash curl jq
+  script:  |
+    echo "Creating GitLab release for tag $CI_COMMIT_TAG..."
+    curl --header "PRIVATE-TOKEN: $GITLAB_TOKEN" --request POST \
+      --form "name=Release $CI_COMMIT_TAG" \
+      --form "tag_name=$CI_COMMIT_TAG" \
+      --form "description=AntParade GitOps 🐜 - $CI_PROJECT_NAME:$CI_COMMIT_TAG Docker image." \
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases" || echo "Release might already exist"    # Add Docker Hub release asset link
+
+    DOCKER_HUB_LINK="https://hub.docker.com/r/prplanit/apt-cacher-ng-oci/tags?page=1&name=$CI_COMMIT_TAG"
+
+    curl --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+      --request POST \
+      --header "Content-Type: application/json" \
+      --data "{\"name\":\"Docker Hub Image ($CI_COMMIT_TAG)\",\"url\":\"$DOCKER_HUB_LINK\",\"link_type\":\"image\"}" \
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links"
+  rules:
+    - if: $CI_COMMIT_TAG
+
 generate_release_notes:
-  image: alpine:latest
+  image: alpine:3.22.1
   stage: release
   variables:
     GIT_TAG: "$CI_COMMIT_TAG"
