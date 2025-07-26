@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: apt-cacher-ng
+  labels:
+    name: apt-cacher-ng
+spec:
+  containers:
+    - name: apt-cacher-ng
+      # This is not an active url atm, still need to setup public facing builds.
+      image: prplanit/apt-cacher-ng-oci
+      imagePullPolicy: IfNotPresent
+      resources:
+        limits:
+          memory: "64Mi"
+          cpu: "500m"
+      ports:
+        - containerPort: 3142
+          protocol: TCP
+      volumeMounts:
+        - mountPath: /var/cache/apt-cacher-ng
+          name: data
+  volumes:
+    - name: data
+      emptyDir: {}
