@@ -23,7 +23,10 @@ RUN sed -i 's|# ForeGround: .*|ForeGround: 1|' /etc/apt-cacher-ng/acng.conf && \
 COPY entrypoint.sh /sbin/entrypoint.sh
 RUN chmod +x /sbin/entrypoint.sh
 
-EXPOSE 3142
+EXPOSE 3142/tcp
+
+HEALTHCHECK --interval=10s --timeout=2s --retries=3 \
+    CMD wget -q -t1 -O /dev/null  http://localhost:3142/acng-report.html || exit 1
 
 ENTRYPOINT ["/usr/bin/tini", "-s", "--", "/sbin/entrypoint.sh"]
 CMD []
