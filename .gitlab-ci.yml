@@ -145,53 +145,43 @@ update-release-badge:
   stage: release
   image: alpine:3.22.1
   script: |
-    echo "Fetching latest pipeline status for this tag..."
+    echo "Installing dependencies..."
+    apk add --no-cache curl jq git bash
 
-    apk add --no-cache bash curl git jq >/dev/null
+    echo "Fetching latest tagged pipeline status..."
+    LATEST_TAG=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/tags" | jq -r '.[0].name')
 
-    PIPELINE_STATUS=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines?ref=$CI_COMMIT_TAG" \
-      | jq -r '.[0].status')
+    PIPELINE_ID=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/commits/$LATEST_TAG/statuses" | jq -r '.[0].id')
+    PIPELINE_STATUS=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$PIPELINE_ID" | jq -r '.status')
 
-    echo "Pipeline status: $PIPELINE_STATUS"
+    echo "Pipeline status for $LATEST_TAG: $PIPELINE_STATUS"
 
-    mkdir -p .badges
-
+    # Set color and status text
     case "$PIPELINE_STATUS" in
       success)
-        STATUS="passed"
         COLOR="#4c1"
+        STATUS="passed"
         ;;
       failed)
-        STATUS="failed"
         COLOR="#e05d44"
+        STATUS="failed"
         ;;
       *)
+        COLOR="#dfb317"
         STATUS="$PIPELINE_STATUS"
-        COLOR="#dfb317" # yellow for unknowns
         ;;
     esac
 
-    cat <<'EOF' > .badges/release-status.svg
-<svg xmlns="http://www.w3.org/2000/svg" width="160" height="20">
-  <rect width="160" height="20" fill="#555"/>
-  <rect x="100" width="60" height="20" fill="${COLOR}"/>
-  <text x="5" y="14" fill="#fff" font-family="Verdana" font-size="11">release</text>
-  <text x="105" y="14" fill="#fff" font-family="Verdana" font-size="11">${STATUS}</text>
-</svg>
-EOF
+    echo "Updating badge SVG..."
+    mkdir -p .badges
+    sed -e "s|{{COLOR}}|$COLOR|g" -e "s|{{STATUS}}|$STATUS|g" assets/badge/release-generic.svg > .badges/release-status.svg
 
-    echo "Committing badge to main branch..."
+    echo "Final badge output:"
+    cat .badges/release-status.svg
 
-    git config --global user.email "ci-bot@gitlab.com"
-    git config --global user.name "GitLab CI"
-    git fetch origin main
-    git checkout main
-    cp .badges/release-status.svg .
-    git add release-status.svg
-    git commit -m "🔖 Update release status badge for $CI_COMMIT_TAG" || echo "No changes to commit"
-    git push origin main || echo "⚠️ Failed to push badge — check permissions"
+  artifacts:
+    paths:
+      - .badges/release-status.svg
+    expire_in: 1 hour
   only:
-    - tags
-  variables:
-    GIT_STRATEGY: fetch
+    - main
