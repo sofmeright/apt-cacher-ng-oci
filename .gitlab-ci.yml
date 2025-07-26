@@ -173,7 +173,7 @@ update-release-badge:
 
     echo "Updating badge SVG..."
     mkdir -p .badges
-    sed -e "s|{{COLOR}}|$COLOR|g" -e "s|{{STATUS}}|$STATUS|g" .assets/badge/release-generic.svg > .badges/release-status.svg
+    sed -e "s|{{COLOR}}|$COLOR|g" -e "s|{{STATUS}}|$STATUS|g" assets/badge/badge-release-generic.svg > .badges/release-status.svg
 
     echo "Final badge output:"
     cat .badges/release-status.svg
