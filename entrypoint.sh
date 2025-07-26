@@ -31,5 +31,5 @@ for file in "${LOG_FILES[@]}"; do
   while [ ! -f "$file" ]; do sleep 0.5; done
 done
 
-# Stream logs to stdout
+# Stream logs to stdout 💖
 exec tail -f /var/log/apt-cacher-ng/apt-cacher.log
