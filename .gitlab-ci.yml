@@ -145,17 +145,17 @@ update-release-badge:
   stage: release
   image: alpine:3.22.1
   script: |
+    set -e
+
     echo "Installing dependencies..."
     apk add --no-cache curl jq git bash
 
     LATEST_TAG=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/tags" | jq -r '.[0].name')
-
     PIPELINE_STATUS=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines?ref=$LATEST_TAG" | jq -r '.[0].status')
 
     echo "Determined latest tag: $LATEST_TAG"
     echo "Pipeline status for $LATEST_TAG: $PIPELINE_STATUS"
 
-    # Set color and status text
     case "$PIPELINE_STATUS" in
       success)
         COLOR="#4c1"
@@ -172,11 +172,16 @@ update-release-badge:
     esac
 
     echo "Updating badge SVG..."
-    mkdir -p .badges
+    mkdir -p assets
     sed -e "s|{{COLOR}}|$COLOR|g" -e "s|{{STATUS}}|$STATUS|g" assets/badge-release-generic.svg > assets/badge-release-status.svg
 
+    if grep -q "{{" assets/badge-release-status.svg; then
+      echo "❌ Error: placeholders not replaced in SVG!"
+      exit 1
+    fi
+
     echo "Final badge output:"
-    cat assets/badge-release-status.svg
+    head -n 20 assets/badge-release-status.svg
 
   artifacts:
     paths:
