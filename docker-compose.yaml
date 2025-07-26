@@ -3,7 +3,7 @@ services:
 
   apt-cacher-ng:
     restart: always
-    image: cr.pcfae.com/prplanit/apt-cacher-ng:2.7.4
+    image: prplanit/apt-cacher-ng-oci:latest
     init: true
     ports:
     - "3142:3142"

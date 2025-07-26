@@ -84,11 +84,11 @@ Include:
 Pull the image from GitHub Container Registry or build it yourself:
 
 ```
-docker pull ghcr.io/prplanit/apt-cacher-ng-oci:latest
+docker pull prplanit/apt-cacher-ng-oci:latest
 ```
 or
 ```
-git clone https://github.com/PrPlanIT/apt-cacher-ng-oci
+git clone https://gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci
 cd apt-cacher-ng-oci
 docker build -t prplanit/apt-cacher-ng-oci .
 ```
@@ -103,14 +103,14 @@ docker run --name apt-cacher-ng --init -d --restart=always \
   -e APT_CACHER_NG_USER=apt-cacher-ng \
   -e APT_CACHER_NG_CACHE_DIR=/var/cache/apt-cacher-ng \
   -e APT_CACHER_NG_LOG_DIR=/var/log/apt-cacher-ng \
-  ghcr.io/prplanit/apt-cacher-ng-oci:latest
+  prplanit/apt-cacher-ng-oci:latest
 ```
 
 ## Command-line Arguments
 Custom args can be passed directly to apt-cacher-ng, for example:
 
 ```
-docker run --rm -it ghcr.io/prplanit/apt-cacher-ng-oci:latest -h
+docker run --rm -it prplanit/apt-cacher-ng-oci:latest -h
 ```
 
 ## Persistence
@@ -132,8 +132,8 @@ version: '3'
 
 services:
   apt-cacher-ng:
-    image: ghcr.io/prplanit/apt-cacher-ng-oci:latest
-    container_name: apt-cacher-ng
+    image: prplanit/apt-cacher-ng-oci:latest
+    container_name: apt-cacher-ng-oci
     ports:
       - "3142:3142"
     volumes:
@@ -190,7 +190,7 @@ Run with the -e flag:
 ```
 docker run --rm -it \
   -v /srv/apt-cacher-ng/cache:/var/cache/apt-cacher-ng \
-  ghcr.io/prplanit/apt-cacher-ng-oci:latest -e
+  prplanit/apt-cacher-ng-oci:latest -e
 ```
 
 Or via web UI:
@@ -200,7 +200,7 @@ http://localhost:3142/acng-report.html → Start Scan and/or Expiration
 ### Upgrading
 
 ```
-docker pull ghcr.io/prplanit/apt-cacher-ng-oci:latest
+docker pull prplanit/apt-cacher-ng-oci:latest
 docker stop apt-cacher-ng && docker rm apt-cacher-ng
 ```
 \# then restart using your run or compose setup
