@@ -196,6 +196,8 @@ update-release-badge:
 
     git add assets/badge-release-status.svg || true
 
+    tree
+    
     # Check if there are any changes to commit
     if git diff --cached --quiet; then
       echo "✅ No changes to commit — badge is up to date."
