@@ -1,7 +1,7 @@
 [![apt-cacher-ng-oci](https://github.com/PrPlanIT/apt-cacher-ng-oci/actions/workflows/build.yml/badge.svg)](https://github.com/PrPlanIT/apt-cacher-ng-oci/actions/workflows/build.yml)
 
 # apt-cacher-ng-oci (v3.7.4) — PrPlanIT Edition 🌎
-This container is a ground-up rework of `sameersbn/docker-apt-cacher-ng`, retaining only a sliver of legacy scaffolding. It exists because I, **SoFMeRight (Kai)**, needed **working stdout log streaming** in a modern OCI-compatible build — and couldn't find a single working image that did it right. So I made one. 🧠
+This container is inspired by other work such as `sameersbn/docker-apt-cacher-ng`, retaining only a sliver of legacy scaffolding. It exists because I, **SoFMeRight (Kai)**, needed **working stdout log streaming** in a modern OCI-compatible build — and couldn't find a single working image that did it right. So I made one. 🧠
 
 This version includes:
 - Functional container log streaming via `tail -f`
@@ -208,7 +208,7 @@ docker exec -it apt-cacher-ng bash
 
 ---
 
-This container is maintained by SoFMeRight for PrPlanIT — Secure & Smart DevOps solutions.
+This container is maintained by SoFMeRight for PrPlanIT — Real world results for your real world expectations.
 
 ---
 
