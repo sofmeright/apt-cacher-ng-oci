@@ -34,8 +34,6 @@ build-image:
 create-release:
   stage: release
   image: alpine:3.22.1
-  tags:
-    - shell  # Use your actual runner tag here
   before_script: |
     echo "---------------------------------------------------------------------------"
     echo "AntParade GitOps 🐜 - Preparing $CI_JOB_IMAGE image for release upload tasks"
