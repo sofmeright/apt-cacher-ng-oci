@@ -1,43 +1,24 @@
 #!/bin/bash
 set -e
 
-create_pid_dir() {
-  mkdir -p /run/apt-cacher-ng
-  chmod -R 0755 /run/apt-cacher-ng
-  chown ${APT_CACHER_NG_USER}:${APT_CACHER_NG_USER} /run/apt-cacher-ng
+# Create necessary directories with correct ownership and permissions
+create_dirs() {
+  mkdir -p /run/apt-cacher-ng "${APT_CACHER_NG_CACHE_DIR}" "${APT_CACHER_NG_LOG_DIR}"
+  chown -R "${APT_CACHER_NG_USER}:${APT_CACHER_NG_USER}" /run/apt-cacher-ng "${APT_CACHER_NG_CACHE_DIR}" "${APT_CACHER_NG_LOG_DIR}"
 }
 
-create_cache_dir() {
-  mkdir -p ${APT_CACHER_NG_CACHE_DIR}
-  chmod -R 0755 ${APT_CACHER_NG_CACHE_DIR}
-  chown -R ${APT_CACHER_NG_USER}:root ${APT_CACHER_NG_CACHE_DIR}
-}
+create_dirs
 
-create_log_dir() {
-  mkdir -p ${APT_CACHER_NG_LOG_DIR}
-  chmod -R 0755 ${APT_CACHER_NG_LOG_DIR}
-  chown -R ${APT_CACHER_NG_USER}:${APT_CACHER_NG_USER} ${APT_CACHER_NG_LOG_DIR}
-}
-
-create_pid_dir
-create_cache_dir
-create_log_dir
-
-# allow arguments to be passed to apt-cacher-ng
-if [[ ${1:0:1} = '-' ]]; then
-  EXTRA_ARGS="$@"
-  set --
-elif [[ ${1} == apt-cacher-ng || ${1} == $(command -v apt-cacher-ng) ]]; then
-  EXTRA_ARGS="${@:2}"
-  set --
+# Allow runtime override of PassThroughPattern via environment variable (optional)
+if [[ -n "${PASS_THROUGH_PATTERN}" ]]; then
+  sed -i "s|^PassThroughPattern:.*|PassThroughPattern: ${PASS_THROUGH_PATTERN}|" /etc/apt-cacher-ng/acng.conf
 fi
 
-# default behaviour is to launch apt-cacher-ng in foreground
-if [[ -z ${1} ]]; then
-  exec /usr/sbin/apt-cacher-ng -c /etc/apt-cacher-ng \
-    ForeGround=1 \
-    Logfile=/dev/stdout \
-    PassThroughPattern='.*'
-else
-  exec "$@"
-fi
+# Start apt-cacher-ng in foreground as apt-cacher-ng user
+exec su-exec ${APT_CACHER_NG_USER} /usr/sbin/apt-cacher-ng -c /etc/apt-cacher-ng ForeGround=1 &
+
+# Wait a moment to ensure log files are created
+sleep 1
+
+# Tail logs to stdout (container logs)
+exec tail -F "${APT_CACHER_NG_LOG_DIR}/apt-cacher.log" "${APT_CACHER_NG_LOG_DIR}/error.log"
