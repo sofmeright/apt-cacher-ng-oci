@@ -175,12 +175,12 @@ update-latest-release-status-badge:
         ;;
     esac
 
-    cat <<EOF > .badges/release-status.svg
+    cat << "EOF" > .badges/release-status.svg
 <svg xmlns="http://www.w3.org/2000/svg" width="160" height="20">
   <rect width="160" height="20" fill="#555"/>
-  <rect x="100" width="60" height="20" fill="$COLOR"/>
+  <rect x="100" width="60" height="20" fill="${COLOR}"/>
   <text x="5" y="14" fill="#fff" font-family="Verdana" font-size="11">release</text>
-  <text x="105" y="14" fill="#fff" font-family="Verdana" font-size="11">$STATUS</text>
+  <text x="105" y="14" fill="#fff" font-family="Verdana" font-size="11">${STATUS}</text>
 </svg>
 EOF
 
