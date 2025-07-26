@@ -183,6 +183,9 @@ update-release-badge:
 
     echo "🚀 Uploading badge to repository via GitLab API..."
 
+    FILE_PATH="assets/badge-release-status.svg"
+    ENCODED_FILE_PATH=$(echo "$FILE_PATH" | sed 's/\//%2F/g')
+
     curl --request PUT --header "PRIVATE-TOKEN: $GITLAB_TOKEN_PROTECTED" \
       --header "Content-Type: application/json" \
       --data "{
@@ -191,7 +194,7 @@ update-release-badge:
         \"commit_message\": \"Update release badge for $LATEST_TAG\",
         \"encoding\": \"base64\"
       }" \
-      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/files/$(curl -Gso /dev/null -w %{url_effective} --data-urlencode "file_path=assets/badge-release-status.svg" "" | sed 's/.*=//')"
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/files/$ENCODED_FILE_PATH"
   artifacts:
     paths:
       - assets/badge-release-status.svg
