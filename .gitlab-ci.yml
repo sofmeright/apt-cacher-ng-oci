@@ -32,14 +32,15 @@ build-image:
     - if: $CI_COMMIT_TAG
 
 create-release:
-  stage: release
-  image: alpine:3.22.1
+  dependencies:
+    - generate_release_notes
   before_script:  |
     echo "---------------------------------------------------------------------------"
     echo "AntParade GitOps 🐜 - Preparing $CI_JOB_IMAGE image for release upload tasks"
     echo "---------------------------------------------------------------------------"
     echo "Installing dependencies... (bash curl jq)"
     apk add --no-cache bash curl jq
+  image: alpine:3.22.1
   script:  |
     echo "Reading changelog..."
     RELEASE_NOTES=$(cat release.md)
@@ -60,20 +61,19 @@ create-release:
       --header "Content-Type: application/json" \
       --data "{\"name\":\"Docker Image $CI_COMMIT_TAG\",\"url\":\"$DOCKER_IMAGE_LINK\",\"link_type\":\"other\"}" \
       "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links"
+  stage: release
 
 generate_release_notes:
-  stage: release
-  image: alpine:3.22.1
-  before_script:
-    - chmod +x ./scripts/release-notes.sh
-  variables:
-    GIT_TAG: "$CI_COMMIT_TAG"
-  script:
-    - apk add --no-cache git bash
-    - ./scripts/release-notes.sh > release.md
   artifacts:
     paths:
       - release.md
     expire_in: 1 hour
+  before_script:
+    - chmod +x ./scripts/release-notes.sh
+  image: alpine:3.22.1
   only:
     - tags
+  script:
+    - apk add --no-cache git bash
+    - ./scripts/release-notes.sh > release.md
+  stage: release
