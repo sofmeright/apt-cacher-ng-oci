@@ -14,7 +14,8 @@ RUN apt-get update \
 # Enable foreground mode and redirect logs to stdout
 RUN sed -i 's|# ForeGround: .*|ForeGround: 1|' /etc/apt-cacher-ng/acng.conf \
  && sed -i 's|# Logfile: .*|Logfile: /dev/stdout|' /etc/apt-cacher-ng/acng.conf \
- && sed -i 's|# PassThroughPattern:.*|PassThroughPattern: .* #|' /etc/apt-cacher-ng/acng.conf
+ && sed -i 's|^LogDir:.*|# LogDir: disabled in container|' /etc/apt-cacher-ng/acng.conf \
+ && sed -i 's|^PassThroughPattern:.*|# removed to avoid duplication|' /etc/apt-cacher-ng/acng.conf
 
 RUN rm -rf /var/lib/apt/lists/*
 
