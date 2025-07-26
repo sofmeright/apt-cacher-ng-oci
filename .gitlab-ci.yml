@@ -141,17 +141,14 @@ generate_release_notes:
     fi
   stage: release
 
-update-latest-release-status-badge:
+update-release-badge:
   stage: release
   image: alpine:3.22.1
-  only:
-    - tags
   script: |
-    echo "Generating release status badge for tag: $CI_COMMIT_TAG"
-
-    apk add --no-cache git bash curl jq >/dev/null
-
     echo "Fetching latest pipeline status for this tag..."
+
+    apk add --no-cache bash curl git jq >/dev/null
+
     PIPELINE_STATUS=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
       "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines?ref=$CI_COMMIT_TAG" \
       | jq -r '.[0].status')
@@ -190,8 +187,11 @@ EOF
     git config --global user.name "GitLab CI"
     git fetch origin main
     git checkout main
-    mkdir -p .badges
     cp .badges/release-status.svg .
     git add release-status.svg
     git commit -m "🔖 Update release status badge for $CI_COMMIT_TAG" || echo "No changes to commit"
     git push origin main || echo "⚠️ Failed to push badge — check permissions"
+  only:
+    - tags
+  variables:
+    GIT_STRATEGY: fetch
