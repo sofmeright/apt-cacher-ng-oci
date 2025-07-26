@@ -34,17 +34,27 @@ build-image:
 create-release:
   stage: release
   image: alpine:3.22.1
-  before_script:  |
+  tags:
+    - shell  # Use your actual runner tag here
+  before_script: |
     echo "---------------------------------------------------------------------------"
     echo "AntParade GitOps 🐜 - Preparing $CI_JOB_IMAGE image for release upload tasks"
     echo "---------------------------------------------------------------------------"
     echo "Installing dependencies... (bash curl jq)"
     apk add --no-cache bash curl jq
-  script:  |
+  script: |
     echo "Creating GitLab release for tag $CI_COMMIT_TAG..."
+    
     DOCKER_IMAGE_LINK="https://hub.docker.com/r/$DOCKER_HUB_USERNAME/$CI_PROJECT_NAME/tags?page=1&name=$CI_COMMIT_TAG"
 
-    echo "Creating GitLab release with notes and Docker image link..."
+    # Read and escape release notes
+    if [ -f release.md ]; then
+      RELEASE_NOTES=$(jq -Rs . < release.md)
+    else
+      RELEASE_NOTES="\"AntParade GitOps 🐜 - Release notes not found.\""
+    fi
+
+    # Create release with link
     curl --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
       --request POST \
       --header "Content-Type: application/json" \
@@ -62,6 +72,8 @@ create-release:
         }
       }" \
       "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases"
+  rules:
+    - if: $CI_COMMIT_TAG
 
 generate_release_notes:
   before_script:

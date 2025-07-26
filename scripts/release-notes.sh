@@ -20,6 +20,8 @@ NOTABLE_CHANGES=$(git tag -l --format='%(contents)' "$RELEASE" | sed '/-----BEGI
 CHANGELOG=$(git log --no-merges --pretty=format:'- [%h] %s (%aN)' "${PREV_RELEASE}..${RELEASE}")
 
 cat <<EOF
+# AntParade GitOps 🐜 - $CI_PROJECT_NAME:$CI_COMMIT_TAG Docker image.
+
 ${NOTABLE_CHANGES}
 
 ## Docker Images for prplanit/apt-cacher-ng:${RELEASE}
