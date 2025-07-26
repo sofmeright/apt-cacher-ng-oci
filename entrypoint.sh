@@ -34,7 +34,7 @@ fi
 
 # default behaviour is to launch apt-cacher-ng in foreground
 if [[ -z ${1} ]]; then
-  exec /usr/sbin/apt-cacher-ng -c /etc/apt-cacher-ng ${EXTRA_ARGS}
+  exec /usr/sbin/apt-cacher-ng -c /etc/apt-cacher-ng -o PassThroughPattern='.*' ${EXTRA_ARGS}
 else
   exec "$@"
 fi
