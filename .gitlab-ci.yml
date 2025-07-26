@@ -148,17 +148,9 @@ update-release-badge:
     set -e
     apk add --no-cache curl jq bash coreutils
 
-    echo "🔍 Fetching jobs JSON..."
-    curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/jobs" > jobs.json
-
-    echo "🔍 Extracting job statuses excluding 'update-release-badge'..."
-    JOB_STATUSES=$(jq -r '.[] | select(.name != "update-release-badge") | .status' jobs.json)
-
-    if [ -z "$JOB_STATUSES" ]; then
-      echo "⚠️ No jobs found after filtering, defaulting status to 'running'"
-      JOB_STATUSES="running"
-    fi
+    echo "🔍 Checking current pipeline job statuses..."
+    JOB_STATUSES=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/jobs" | jq -r '.[].status')
 
 
     ALL_SUCCESS=true
