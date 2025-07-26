@@ -150,13 +150,14 @@ update-release-badge:
 
     echo "🔍 Checking current pipeline job statuses..."
     JOB_STATUSES=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/jobs" | jq -r '.[].status')
+      "$CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/jobs" \
+      | jq -r '.[] | select(.name != "update-release-badge") | .status')
 
     ALL_SUCCESS=true
     ANY_FAILED=false
     ANY_RUNNING=false
 
-    printf '%s\n' "$JOB_STATUSES" | while IFS= read -r status; do
+    while IFS= read -r status; do
       case "$status" in
         failed)
           ANY_FAILED=true
@@ -173,7 +174,7 @@ update-release-badge:
           ALL_SUCCESS=false
           ;;
       esac
-    done
+    done <<< "$JOB_STATUSES"
 
     if [ "$ALL_SUCCESS" = true ]; then
       STATUS="passed"
