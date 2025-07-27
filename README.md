@@ -9,6 +9,7 @@ This version includes:
 - Secure volume handling with init-based ownership
 - Graceful startup waits for logs
 
+This is a clone of the [original repo](https://gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci), as such *this particular page may become outdated*. I do not particularly wish to automate github without being given incentive.
 ---
 
 > Maintained by [PrPlanIT](https://prplanit.com) — Real world results for your real world expectations.
@@ -65,7 +66,7 @@ Include:
 
 ## Installation
 
-Pull the image from GitHub Container Registry or build it yourself:
+Pull the image from [GitHub Container Registry](https://github.com/sofmeright/apt-cacher-ng-oci) or build it yourself:
 
 ```
 docker pull prplanit/apt-cacher-ng-oci:latest
