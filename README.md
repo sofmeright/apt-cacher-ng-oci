@@ -67,7 +67,7 @@ Include:
 
 ## Installation
 
-Pull the image from [GitHub Container Registry](https://github.com/sofmeright/apt-cacher-ng-oci) or build it yourself:
+Pull the image from [Docker Hub (docker.io)](https://hub.docker.com/r/prplanit/apt-cacher-ng-oci/tags) or build it yourself:
 
 ```
 docker pull prplanit/apt-cacher-ng-oci:latest
