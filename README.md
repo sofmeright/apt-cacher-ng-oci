@@ -47,7 +47,7 @@ This is maintained by a solo DevOps freak. You can:
 
 - Send a PR or fork it and tell your friends.
 - Report issues.
-- Buy me a ☕ if this saves you some bandwidth. (Donation link coming soon...)
+- [Buy me a ☕](https://ko-fi.com/T6T41IT163) if this saves you some bandwidth.
 
 ## Issues
 
