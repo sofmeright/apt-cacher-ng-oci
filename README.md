@@ -1,7 +1,9 @@
 ![Latest Release](https://gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci/-/badges/release.svg) ![Latest Release Status](https://gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci/-/raw/main/assets/badge-release-status.svg) [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/T6T41IT163)
 
-# apt-cacher-ng-oci — PrPlanIT Edition 🌎
-This container is inspired by other work such as `sameersbn/docker-apt-cacher-ng`, retaining only a sliver of legacy scaffolding. It exists because I, **SoFMeRight (Kai)**, needed **working stdout log streaming** in a modern OCI-compatible build — and couldn't find a single working image that did it right. So I made one. 🧠
+# 📦 apt-cacher-ng-oci
+A caching proxy for Debian-based package downloads (e.g., APT). This image is ideal for improving speed and reducing bandwidth in CI pipelines or homelab networks that frequently install packages from Debian, Ubuntu, or other APT-based distributions. It also includes built-in logging support, making it easier to monitor usage and troubleshoot caching behavior.
+
+This container is inspired by other work such as `sameersbn/docker-apt-cacher-ng`. In poking around I struggled to find an image with working logs. So I decided to make one. 😁
 
 This version includes:
 - Functional container log streaming via `tail -f`
@@ -9,11 +11,9 @@ This version includes:
 - Secure volume handling with init-based ownership
 - Graceful startup waits for logs
 
-This is a clone of the [original repo](https://gitlab.prplanit.com/precisionplanit/apt-cacher-ng-oci), as such *this particular page may become outdated*. I do not particularly wish to automate github without being given incentive.
-
 ---
 
-> Maintained by [PrPlanIT](https://prplanit.com) — Real world results for your real world expectations.
+> Maintained by SoFMeRight for [PrPlanIT](https://precisionplanit.com) — Real world results for your real world expectations.
 
 ---
 
@@ -39,15 +39,13 @@ This is a clone of the [original repo](https://gitlab.prplanit.com/precisionplan
 
 `Dockerfile` for a containerized version of [Apt-Cacher NG](https://www.unix-ag.uni-kl.de/~bloch/acng/), the legendary caching proxy for Linux package archives (primarily Debian-based).
 
-This is not just another fork — it’s a reimplementation by [Kai (@SoFMeRight)](https://github.com/sofmeright), with better operational behavior and sane logs.
-
 ## Contributing
 
 This is maintained by a solo DevOps freak. You can:
 
 - Send a PR or fork it and tell your friends.
 - Report issues.
-- [Buy me a ☕](https://ko-fi.com/T6T41IT163) if this saves you some bandwidth.
+- Buy me a ☕ if this saves you some bandwidth. (Donation link coming soon...)
 
 ## Issues
 
@@ -67,7 +65,7 @@ Include:
 
 ## Installation
 
-Pull the image from [Docker Hub (docker.io)](https://hub.docker.com/r/prplanit/apt-cacher-ng-oci/tags) or build it yourself:
+Pull the image from [GitHub Container Registry](https://hub.docker.com/r/prplanit/apt-cacher-ng-oci) or build it yourself:
 
 ```
 docker pull prplanit/apt-cacher-ng-oci:latest
